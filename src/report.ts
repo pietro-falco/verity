@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import type { VerifyReport } from "./types.js";
+import type { VerifyReport } from "./types.ts";
 
 export function formatHuman(report: VerifyReport): string {
   const lines = report.results.map((r) => {

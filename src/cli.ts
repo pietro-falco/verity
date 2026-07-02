@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import process from "node:process";
-import { formatHuman, toReceiptJson, writeReceipt } from "./report.js";
-import { VerityUsageError } from "./types.js";
-import { DEFAULT_MANIFEST_PATH, getToolVersion, verify } from "./verify.js";
+import { formatHuman, toReceiptJson, writeReceipt } from "./report.ts";
+import { VerityUsageError } from "./types.ts";
+import { DEFAULT_MANIFEST_PATH, getToolVersion, verify } from "./verify.ts";
 
 const USAGE = `verity — deterministic claim verifier
 

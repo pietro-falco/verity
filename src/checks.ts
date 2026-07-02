@@ -11,7 +11,7 @@ import type {
   FileMatchesClaim,
   GitCommittedClaim,
   MatchSpec,
-} from "./types.js";
+} from "./types.ts";
 
 interface MatchOutcome {
   pass: boolean;

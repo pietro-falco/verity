@@ -2,9 +2,9 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { runClaim } from "./checks.js";
-import type { Claim, ClaimResult, Manifest, MatchSpec, VerifyReport } from "./types.js";
-import { VerityUsageError } from "./types.js";
+import { runClaim } from "./checks.ts";
+import type { Claim, ClaimResult, Manifest, MatchSpec, VerifyReport } from "./types.ts";
+import { VerityUsageError } from "./types.ts";
 
 export const DEFAULT_MANIFEST_PATH = ".verity/claims.json";
 
