@@ -1,6 +1,6 @@
 # ADR-001: verity architecture and scope
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-07-02
 - Deciders: Pietro Falco
 
