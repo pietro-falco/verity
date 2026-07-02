@@ -1,0 +1,52 @@
+{
+  "version": "0.1",
+  "claims": [
+    {
+      "id": "readme-exists",
+      "type": "file_exists",
+      "path": "README.md",
+      "nonEmpty": true
+    },
+    {
+      "id": "license-mit",
+      "type": "file_matches",
+      "path": "LICENSE",
+      "match": { "kind": "substring", "value": "MIT License" }
+    },
+    {
+      "id": "readme-title",
+      "type": "file_matches",
+      "path": "README.md",
+      "match": { "kind": "regex", "value": "^# verity", "flags": "m" }
+    },
+    {
+      "id": "adr-accepted",
+      "type": "git_committed",
+      "path": "docs/adrs/0001-verity-architecture.md",
+      "match": { "kind": "substring", "value": "- Status: Accepted" }
+    },
+    {
+      "id": "skill-committed",
+      "type": "git_committed",
+      "path": "SKILL.md"
+    },
+    {
+      "id": "spec-committed",
+      "type": "git_committed",
+      "path": "docs/spec.md"
+    },
+    {
+      "id": "cli-version",
+      "type": "command",
+      "run": "node dist/cli.js --version",
+      "expect": { "exitCode": 0, "stdout": { "kind": "regex", "value": "^0\\.1\\." } }
+    },
+    {
+      "id": "tests-pass",
+      "type": "command",
+      "run": "npm test",
+      "timeoutMs": 180000,
+      "expect": { "exitCode": 0 }
+    }
+  ]
+}
