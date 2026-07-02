@@ -89,6 +89,31 @@ test("file_matches: sha256 kind passes and fails correctly", () => {
   });
 });
 
+test("file_matches: regex kind passes and fails correctly, including flags", () => {
+  withTmpDir((dir) => {
+    writeFileSync(join(dir, "a.txt"), "Line one\nLine two\nHELLO\n");
+    const ctx: CheckContext = { cwd: dir, repoRoot: null };
+
+    const pass = checkFileMatches(
+      { id: "fm-5", type: "file_matches", path: "a.txt", match: { kind: "regex", value: "^Line two$", flags: "m" } },
+      ctx,
+    );
+    assert.equal(pass.verdict, "PASS");
+
+    const passCaseInsensitive = checkFileMatches(
+      { id: "fm-6", type: "file_matches", path: "a.txt", match: { kind: "regex", value: "^hello$", flags: "im" } },
+      ctx,
+    );
+    assert.equal(passCaseInsensitive.verdict, "PASS");
+
+    const fail = checkFileMatches(
+      { id: "fm-7", type: "file_matches", path: "a.txt", match: { kind: "regex", value: "^Line three$", flags: "m" } },
+      ctx,
+    );
+    assert.equal(fail.verdict, "FAIL");
+  });
+});
+
 function initGitRepo(dir: string): void {
   execFileSync("git", ["init", "-q"], { cwd: dir });
   execFileSync("git", ["config", "user.email", "verity-test@example.com"], { cwd: dir });
@@ -162,4 +187,28 @@ test("command: fails when the exit code does not match", () => {
     ctx,
   );
   assert.equal(result.verdict, "FAIL");
+});
+
+test("command: fails when exit code matches but stdout does not", () => {
+  const ctx: CheckContext = { cwd: process.cwd(), repoRoot: null };
+  const result = checkCommand(
+    {
+      id: "cmd-3",
+      type: "command",
+      run: "echo hi",
+      expect: { exitCode: 0, stdout: { kind: "substring", value: "bye" } },
+    },
+    ctx,
+  );
+  assert.equal(result.verdict, "FAIL");
+});
+
+test("command: a command that exceeds timeoutMs is killed and FAILs with timeout evidence", () => {
+  const ctx: CheckContext = { cwd: process.cwd(), repoRoot: null };
+  const result = checkCommand(
+    { id: "cmd-4", type: "command", run: "sleep 2", timeoutMs: 200, expect: { exitCode: 0 } },
+    ctx,
+  );
+  assert.equal(result.verdict, "FAIL");
+  assert.match(result.evidence, /timed out/);
 });
