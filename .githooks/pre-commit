@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+
+gitleaks protect --staged --redact
+exit $?
