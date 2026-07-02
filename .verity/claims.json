@@ -57,6 +57,12 @@
       "id": "ci-committed",
       "type": "git_committed",
       "path": ".github/workflows/ci.yml"
+    },
+    {
+      "id": "skill-scoped-npx",
+      "type": "file_matches",
+      "path": "SKILL.md",
+      "match": { "kind": "substring", "value": "npx @pietro-falco/verity" }
     }
   ]
 }
