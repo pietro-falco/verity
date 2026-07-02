@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - run: node dist/cli.js verify
+
+  node20-compat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: node dist/cli.js --version
+      - name: Verify built CLI against a temp fixture
+        run: |
+          FIXTURE_DIR=$(mktemp -d)
+          echo "hello" > "$FIXTURE_DIR/hello.txt"
+          cat > "$FIXTURE_DIR/claims.json" <<'EOF'
+          {
+            "version": "0.1",
+            "claims": [
+              { "id": "hello-exists", "type": "file_exists", "path": "hello.txt", "nonEmpty": true }
+            ]
+          }
+          EOF
+          node dist/cli.js verify "$FIXTURE_DIR/claims.json"
