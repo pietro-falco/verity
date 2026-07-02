@@ -67,3 +67,5 @@ trusts the receipt it produces, not your narration of what you did.
   is not the same claim as a file being committed.
 - Keep `command` claims fast and side-effect-free; they run for real, every
   verification.
+- Add `.verity/reports/` to your project's `.gitignore` — receipts are
+  generated artifacts, not source.

@@ -1,5 +1,7 @@
 # verity
 
+[![CI](https://github.com/pietro-falco/verity/actions/workflows/ci.yml/badge.svg)](https://github.com/pietro-falco/verity/actions/workflows/ci.yml)
+
 Turn your coding agent's "done" into a receipt you can check — deterministic, local, zero-dependency.
 
 Status: pre-alpha
@@ -41,7 +43,10 @@ OVERALL: PASS
 
 ## Install / Quickstart
 
-**From source (today):**
+**`npx @pietro-falco/verity verify`** — the zero-install path. Run it in any
+project with a `.verity/claims.json` manifest.
+
+**From source (for development):**
 
 ```
 git clone https://github.com/pietro-falco/verity.git
@@ -50,9 +55,6 @@ npm install
 npm run build
 node dist/cli.js verify
 ```
-
-**`npx verity verify` (once published to npm):** this is the intended
-zero-install path once the package is published — it is not usable yet.
 
 ## Claim types
 
