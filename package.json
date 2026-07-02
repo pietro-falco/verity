@@ -6,6 +6,9 @@
   "bin": {
     "verity": "dist/cli.js"
   },
+  "main": "dist/verify.js",
+  "types": "dist/verify.d.ts",
+  "files": ["dist", "SKILL.md", "docs/spec.md"],
   "engines": {
     "node": ">=20"
   },
@@ -14,12 +17,27 @@
     "test": "node --test",
     "prepare": "tsc"
   },
+  "keywords": [
+    "ai-agents",
+    "coding-agents",
+    "verification",
+    "guardrails",
+    "claude-code",
+    "evidence",
+    "receipt",
+    "cli",
+    "deterministic"
+  ],
   "author": "Pietro Falco <ptr.falco@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pietrofalco/verity.git"
   },
+  "bugs": {
+    "url": "https://github.com/pietrofalco/verity/issues"
+  },
+  "homepage": "https://github.com/pietrofalco/verity#readme",
   "devDependencies": {
     "typescript": "^6.0.3",
     "@types/node": "^26.1.0"
