@@ -17,7 +17,7 @@ trusts the receipt it produces, not your narration of what you did.
    - Work you committed → `git_committed`.
    - "Tests pass" / "build passes" → `command` claims that actually run
      the test suite / build, not claims that assume the outcome.
-2. Run `npx verity verify` (or, in a development checkout of verity itself,
+2. Run `npx @pietro-falco/verity verify` (or, in a development checkout of verity itself,
    `node dist/cli.js verify`).
 3. Paste the full raw report output back to the human — never summarize it.
 4. If any claim FAILs, either fix the underlying work or correct the claim,
