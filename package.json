@@ -21,7 +21,7 @@
     "url": "git+https://github.com/pietrofalco/verity.git"
   },
   "devDependencies": {
-    "typescript": "latest",
-    "@types/node": "latest"
+    "typescript": "^6.0.3",
+    "@types/node": "^26.1.0"
   }
 }
