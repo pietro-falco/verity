@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { runClaim } from "./checks.ts";
 import type { Claim, ClaimResult, Manifest, MatchSpec, VerifyReport } from "./types.ts";
@@ -158,17 +158,28 @@ export interface VerifyOutcome {
   exitCode: 0 | 1;
 }
 
+/**
+ * The base directory that relative claim paths (and default command cwd) resolve against:
+ * the directory containing the manifest, or its parent when the manifest lives under a
+ * ".verity" directory (so the base is the repo root, not the ".verity" dir itself).
+ */
+function resolveBaseDir(absManifestPath: string): string {
+  const manifestDir = dirname(absManifestPath);
+  return basename(manifestDir) === ".verity" ? dirname(manifestDir) : manifestDir;
+}
+
 export function verify(manifestPath: string, cwd: string = process.cwd()): VerifyOutcome {
   const absManifestPath = resolve(cwd, manifestPath);
   const manifest = loadManifest(absManifestPath);
-  const repoRoot = getRepoRoot(cwd);
+  const base = resolveBaseDir(absManifestPath);
+  const repoRoot = getRepoRoot(base);
 
-  const results: ClaimResult[] = manifest.claims.map((claim) => runClaim(claim, { cwd, repoRoot }));
+  const results: ClaimResult[] = manifest.claims.map((claim) => runClaim(claim, { cwd: base, repoRoot }));
 
   const report: VerifyReport = {
     version: getToolVersion(),
     timestamp: new Date().toISOString(),
-    gitHeadSha: getGitHeadSha(cwd),
+    gitHeadSha: getGitHeadSha(base),
     results,
   };
 

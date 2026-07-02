@@ -62,3 +62,25 @@ test("verify: missing manifest throws a usage error", () => {
     assert.throws(() => verify(".verity/claims.json", dir));
   });
 });
+
+test("verify: manifest under .verity/ resolves claim paths against the repo root, not the process cwd", () => {
+  withTmpDir((repoDir) => {
+    withTmpDir((elsewhere) => {
+      writeFileSync(join(repoDir, "file.txt"), "hello");
+      mkdirSync(join(repoDir, ".verity"));
+      writeFileSync(
+        join(repoDir, ".verity", "claims.json"),
+        JSON.stringify({
+          version: "0.1",
+          claims: [{ id: "base-1", type: "file_exists", path: "file.txt" }],
+        }),
+      );
+
+      // Absolute manifest path; verify() is invoked with an unrelated process cwd.
+      const outcome = verify(join(repoDir, ".verity", "claims.json"), elsewhere);
+
+      assert.equal(outcome.exitCode, 0);
+      assert.equal(outcome.report.results[0]?.verdict, "PASS");
+    });
+  });
+});

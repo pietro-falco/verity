@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import type {
   CheckContext,
   Claim,
@@ -142,7 +142,9 @@ export function checkGitCommitted(claim: GitCommittedClaim, ctx: CheckContext): 
     };
   }
 
-  const result = spawnSync("git", ["show", `HEAD:${claim.path}`], {
+  const repoRelativePath = relative(ctx.repoRoot, resolve(ctx.cwd, claim.path));
+
+  const result = spawnSync("git", ["show", `HEAD:${repoRelativePath}`], {
     cwd: ctx.repoRoot,
   });
 
@@ -165,7 +167,7 @@ export function checkGitCommitted(claim: GitCommittedClaim, ctx: CheckContext): 
       subject: claim.path,
       predicate,
       verdict: "FAIL",
-      evidence: `git show HEAD:${claim.path} exit ${result.status}${stderr ? `; stderr: ${stderr}` : ""}`,
+      evidence: `git show HEAD:${repoRelativePath} exit ${result.status}${stderr ? `; stderr: ${stderr}` : ""}`,
     };
   }
 
@@ -176,7 +178,7 @@ export function checkGitCommitted(claim: GitCommittedClaim, ctx: CheckContext): 
       subject: claim.path,
       predicate,
       verdict: "PASS",
-      evidence: `git show HEAD:${claim.path} exit 0`,
+      evidence: `git show HEAD:${repoRelativePath} exit 0`,
     };
   }
 
@@ -187,7 +189,7 @@ export function checkGitCommitted(claim: GitCommittedClaim, ctx: CheckContext): 
     subject: claim.path,
     predicate,
     verdict: outcome.pass ? "PASS" : "FAIL",
-    evidence: `git show HEAD:${claim.path} exit 0; ${outcome.evidence}`,
+    evidence: `git show HEAD:${repoRelativePath} exit 0; ${outcome.evidence}`,
   };
 }
 
