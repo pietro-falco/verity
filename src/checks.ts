@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync, statSync } from "node:fs";
-import { relative, resolve } from "node:path";
+import { relative, resolve, sep } from "node:path";
 import type {
   CheckContext,
   Claim,
@@ -142,7 +142,8 @@ export function checkGitCommitted(claim: GitCommittedClaim, ctx: CheckContext): 
     };
   }
 
-  const repoRelativePath = relative(ctx.repoRoot, resolve(ctx.cwd, claim.path));
+  // git show HEAD:<path> requires posix separators regardless of platform.
+  const repoRelativePath = relative(ctx.repoRoot, resolve(ctx.cwd, claim.path)).split(sep).join("/");
 
   const result = spawnSync("git", ["show", `HEAD:${repoRelativePath}`], {
     cwd: ctx.repoRoot,
