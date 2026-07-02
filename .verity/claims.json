@@ -47,6 +47,16 @@
       "run": "npm test",
       "timeoutMs": 180000,
       "expect": { "exitCode": 0 }
+    },
+    {
+      "id": "lockfile-committed",
+      "type": "git_committed",
+      "path": "package-lock.json"
+    },
+    {
+      "id": "ci-committed",
+      "type": "git_committed",
+      "path": ".github/workflows/ci.yml"
     }
   ]
 }
