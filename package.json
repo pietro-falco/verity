@@ -1,5 +1,5 @@
 {
-  "name": "verity",
+  "name": "@pietro-falco/verity",
   "version": "0.1.0",
   "type": "module",
   "description": "Turn your coding agent's 'done' into a receipt you can check — deterministic, local, zero-dependency.",
@@ -28,16 +28,16 @@
     "cli",
     "deterministic"
   ],
-  "author": "Pietro Falco <ptr.falco@gmail.com>",
+  "author": "Pietro Falco <pietrofalco.dev@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pietrofalco/verity.git"
+    "url": "git+https://github.com/pietro-falco/verity.git"
   },
   "bugs": {
-    "url": "https://github.com/pietrofalco/verity/issues"
+    "url": "https://github.com/pietro-falco/verity/issues"
   },
-  "homepage": "https://github.com/pietrofalco/verity#readme",
+  "homepage": "https://github.com/pietro-falco/verity#readme",
   "devDependencies": {
     "typescript": "^6.0.3",
     "@types/node": "^26.1.0"

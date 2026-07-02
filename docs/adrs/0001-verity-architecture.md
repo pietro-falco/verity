@@ -71,4 +71,4 @@ its truth component); destructive-command blocking or sandboxing (covered by exi
   vs dev-loop task claims); vocabulary borrowed for interoperability instead.
 
 If the npm name `verity` is unavailable at publish time, scope the package to
-`@pietrofalco/verity`; the bin name stays `verity`.
+`@pietro-falco/verity`; the bin name stays `verity`.

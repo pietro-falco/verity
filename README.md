@@ -44,7 +44,7 @@ OVERALL: PASS
 **From source (today):**
 
 ```
-git clone https://github.com/pietrofalco/verity.git
+git clone https://github.com/pietro-falco/verity.git
 cd verity
 npm install
 npm run build
