@@ -1,0 +1,13 @@
+{
+  "version": "0.1",
+  "claims": [
+    { "id": "hello-exists", "type": "file_exists", "path": "hello.txt", "nonEmpty": true },
+    {
+      "id": "hello-content",
+      "type": "file_matches",
+      "path": "hello.txt",
+      "match": { "kind": "substring", "value": "hello, verity" }
+    },
+    { "id": "node-available", "type": "command", "run": "node --version", "expect": { "exitCode": 0 } }
+  ]
+}
