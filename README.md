@@ -2,44 +2,64 @@
 
 [![CI](https://github.com/pietro-falco/verity/actions/workflows/ci.yml/badge.svg)](https://github.com/pietro-falco/verity/actions/workflows/ci.yml)
 
-Turn your coding agent's "done" into a receipt you can check — deterministic, local, zero-dependency.
+A notary for your coding agent's "done" — it checks a written claim against reality and stamps it true or false.
 
 Status: pre-alpha
 
-## The problem
+## The problem, in plain words
 
-Coding agents produce plausible narratives about the work they performed.
-"Done" is a claim, not a receipt. A rules file (CLAUDE.md, Cursor rules,
-AGENTS.md) can ask an agent to be honest about what it did — it cannot
-verify that it was. verity checks the claim instead of trusting the
-narration: it moves trust from what the agent says it did to evidence a
-human (or another process) can inspect directly.
+Coding agents say "done" a lot. That word is a claim, not proof. verity
+works like a notary: you don't ask it whether your document is *good*, you
+hand it one specific written statement — "this file exists," "this test
+exits 0," "this line is committed at `HEAD`" — and it checks that single
+statement against reality and stamps it true or false. It doesn't read
+intent, doesn't judge quality, doesn't call anyone for a second opinion.
+Just the claim, the evidence, and a stamp — deterministic, offline, and
+yours to inspect.
 
-## How it works (30 seconds)
+## How it works
 
-The agent — or you — declares a set of claims in `.verity/claims.json`.
-verity runs one deterministic check per claim against literal reality: the
-filesystem, a git repository's `HEAD` via `git show`, or a real command's
-actual exit code. You get a ✓/✗ receipt on stdout and a JSON report on disk.
-The process exits `1` if anything fails, so it gates scripts and CI as
-easily as it informs a human review.
-
-```json
-{
-  "version": "0.1",
-  "claims": [
-    { "id": "tests-pass", "type": "command", "run": "npm test", "expect": { "exitCode": 0 } }
-  ]
-}
+```mermaid
+flowchart LR
+    C["claims.json<br/>declared claims"] --> V["verity verify"]
+    V --> R["check reality:<br/>filesystem, git HEAD,<br/>command exit code"]
+    R --> O["✓/✗ receipt<br/>stdout + JSON report"]
+    O --> E["exit code 0 or 1"]
+    E --> G["gates CI /<br/>informs review"]
 ```
 
-```
-$ verity verify
-✓ tests-pass [command] command exits 0 — exit 0
+## How it fits with its companions
 
-1 passed, 0 failed
-OVERALL: PASS
+```mermaid
+flowchart LR
+    HP["harness-pack<br/>rules, model routing,<br/>receipts around every run"] --> HW["harnesswright<br/>slice ledger + gate:<br/>what work exists,<br/>may it proceed?"]
+    HW --> V["verity<br/>claim verifier:<br/>is this assertion true<br/>against reality?"]
+    V --> HP
 ```
+
+## Commands
+
+| Command | What it does |
+| ------- | ------------- |
+| `verity verify [manifestPath] [--json]` | Runs every claim in the manifest (default `.verity/claims.json`) against reality and prints a pass/fail summary; `--json` prints the full JSON report instead of the human summary |
+| `verity --version` / `-v` | Prints the installed version |
+| `verity --help` / `-h` | Prints usage |
+
+## Guarantees and honest limits
+
+- **Deterministic.** The same claims manifest against the same repository
+  state always produces the same verdict — no LLM, no network call, in the
+  loop.
+- **Zero runtime dependencies.** Node.js built-ins only, so the whole
+  checker is auditable in minutes.
+- **Checks truth, not quality.** A passing claim means the assertion was
+  true against reality — it says nothing about whether the code is good.
+- **Doesn't sign or orchestrate.** No attestation in v0, no workflow
+  orchestration — see
+  [`docs/adrs/0001-verity-architecture.md`](docs/adrs/0001-verity-architecture.md)
+  for the boundary with adjacent tools.
+- **Fails loud.** Exits `1` on any failed claim, so it composes with
+  scripts and CI without extra glue.
 
 ## Install / Quickstart
 
