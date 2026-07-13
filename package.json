@@ -1,6 +1,6 @@
 {
   "name": "@pietro-falco/verity",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Turn your coding agent's 'done' into a receipt you can check — deterministic, local, zero-dependency.",
   "bin": {

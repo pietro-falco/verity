@@ -4,7 +4,7 @@
 
 A notary for your coding agent's "done" — it checks a written claim against reality and stamps it true or false.
 
-Status: pre-alpha
+Status: alpha
 
 ## The problem, in plain words
 
@@ -54,8 +54,9 @@ flowchart LR
   checker is auditable in minutes.
 - **Checks truth, not quality.** A passing claim means the assertion was
   true against reality — it says nothing about whether the code is good.
-- **Doesn't sign or orchestrate.** No attestation in v0, no workflow
-  orchestration — see
+- **Doesn't sign or orchestrate.** Release artifacts on npm carry SLSA
+  provenance (from v0.1.1); the receipts verity emits are not signed, and it
+  orchestrates no workflows — see
   [`docs/adrs/0001-verity-architecture.md`](docs/adrs/0001-verity-architecture.md)
   for the boundary with adjacent tools.
 - **Fails loud.** Exits `1` on any failed claim, so it composes with

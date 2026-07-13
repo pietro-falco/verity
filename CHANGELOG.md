@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.1] - 2026-07-13
+
+- Release workflow (`.github/workflows/release.yml`): tagged releases publish
+  to npm via OIDC trusted publishing, so artifacts carry SLSA provenance. The
+  release is gated by verity's own claims manifest before publish.
+- README quickstart is a runnable block — the `npx -y @pietro-falco/verity
+  verify` invocation is verified against the published package.
+- `llms.txt` at the repository root, for AI-tool consumption; its definitions
+  are sourced from [`docs/spec.md`](docs/spec.md).
+
 ## [0.1.0] - 2026-07-02
 
 - Initial release: `verity verify` runs deterministic checks against a
