@@ -1,0 +1,49 @@
+# verity
+
+> A notary for a coding agent's "done" — you hand it one specific written
+> claim ("this file exists," "this test exits 0," "this line is committed
+> at HEAD") and it checks that single statement against reality and stamps
+> it true or false. Just the claim, the evidence, and a stamp.
+
+## What it is
+
+- A zero-runtime-dependency Node CLI: Node.js built-ins only, auditable in minutes.
+- Deterministic and offline: no LLM, no network call — the same manifest against the same repository state always produces the same verdict.
+- A claim verifier: reconciles declared claims against the literal filesystem, git HEAD, and command exit codes, and emits a receipt.
+
+## What it is NOT
+
+- Does not judge quality: a passing claim means the assertion was true, not that the code is good.
+- Does not sign anything in v0: no attestation — supply-chain attestation (SLSA/in-toto) covers release artifacts post-build; verity covers task-level claims at review time.
+- Does not orchestrate workflows or agents.
+
+## Commands
+
+- `verity verify [manifestPath] [--json]` — run every claim in the manifest (default `.verity/claims.json`) against reality; `--json` prints the full JSON report instead of the human summary. Exit `0` all claims pass, `1` at least one claim fails, `2` usage error (manifest missing, invalid JSON, schema violation, unknown claim type).
+- `verity --version` / `-v` — print the installed version.
+- `verity --help` / `-h` — print usage.
+- Zero-install invocation: `npx -y @pietro-falco/verity verify`.
+
+## Claim types
+
+- `file_exists` — a path exists, resolved against the base directory; `nonEmpty: true` also requires size > 0. Fields: `path`, `nonEmpty`.
+- `file_matches` — a file exists and its content satisfies a MatchSpec. Fields: `path`, `match`.
+- `git_committed` — a path is committed at `HEAD`, verified via `git show HEAD:<path>` — never the working tree; optional `match` runs against the committed content. Fields: `path`, `match`.
+- `command` — a shell command exits within the timeout with the expected exit code (default `0`), optionally matching stdout. Fields: `run`, `cwd`, `timeoutMs`, `expect.exitCode`, `expect.stdout`.
+
+## The match object (MatchSpec)
+
+- `{ "kind": "substring" | "regex" | "sha256", "value": "...", "flags": "optional" }`
+- `substring` — value found anywhere in the content; `regex` — `new RegExp(value, flags)` matches; `sha256` — lowercase-hex digest of the content equals value (case-insensitive compare).
+
+## Key mechanics
+
+- Base directory: relative claim paths resolve against the manifest's own directory — or its parent when that directory is named `.verity` — never the process cwd.
+- Receipt: every run writes a JSON report to `.verity/reports/<ISO-timestamp>.json` with `subject` / `predicate` / `evidence` / `verdict` vocabulary (in-toto-inspired).
+
+## Files that matter
+
+- docs/spec.md — the contract: manifest shape, claim-type semantics, MatchSpec, exit codes, the receipt format.
+- docs/adrs/ — architecture decision records; scope and non-goals live in 0001-verity-architecture.md.
+- SKILL.md — cross-agent skill: emit `.verity/claims.json` after a task, run `verity verify`, paste the raw receipt back unedited.
+- .verity/claims.json — this repository's own manifest; verity verifies itself.

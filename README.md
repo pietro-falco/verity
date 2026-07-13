@@ -63,8 +63,13 @@ flowchart LR
 
 ## Install / Quickstart
 
-**`npx @pietro-falco/verity verify`** — the zero-install path. Run it in any
-project with a `.verity/claims.json` manifest.
+The zero-install path — run it in any project with a `.verity/claims.json`
+manifest:
+
+```sh
+cd your-repo            # anywhere with a .verity/claims.json
+npx -y @pietro-falco/verity verify
+```
 
 **From source (for development):**
 
@@ -123,8 +128,10 @@ This repository verifies itself: [`.verity/claims.json`](.verity/claims.json)
 declares claims about verity's own README, license, ADR status, docs, and
 test suite. Run it with:
 
-```
+```sh
 node dist/cli.js verify
+# or, against the published package:
+npx -y @pietro-falco/verity verify
 ```
 
 ## License
