@@ -1,0 +1,13 @@
+%%{init: {"theme":"dark","securityLevel":"loose","themeVariables":{"fontFamily":"'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif","fontSize":"17px","primaryColor":"#0d1117","primaryTextColor":"#e6edf3","primaryBorderColor":"#8b949e","lineColor":"#6e7681","edgeLabelBackground":"#0d1117"},"flowchart":{"htmlLabels":true,"curve":"basis","padding":18,"nodeSpacing":60,"rankSpacing":70}}}%%
+flowchart LR
+    C("<b style='font-size:1.15em'>claims.json</b><br/><span style='font-size:0.85em'>declared claims</span>") --> V("<b style='font-size:1.15em'>verity verify</b>")
+    V --> R("check reality<br/><span style='font-size:0.85em'>filesystem, git HEAD, command exit code</span>")
+    R --> O("<b style='font-size:1.15em'>receipt</b><br/><span style='font-size:0.85em'>stdout + JSON report</span>")
+    O --> E("exit code 0 or 1")
+    E --> G("gates CI, informs review")
+    class V gate
+    class O pass
+    classDef default fill:#0d1117,stroke:#8b949e,stroke-width:1.5px,color:#e6edf3
+    classDef gate fill:#0d1117,stroke:#ffd699,stroke-width:2px,color:#ffd699
+    classDef pass fill:#0d1117,stroke:#2ea043,stroke-width:1.5px,color:#7ee2a8
+    classDef halt fill:#0d1117,stroke:#ffd699,stroke-width:1.5px,color:#ffd699

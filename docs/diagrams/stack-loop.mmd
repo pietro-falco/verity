@@ -1,0 +1,10 @@
+%%{init: {"theme":"dark","securityLevel":"loose","themeVariables":{"fontFamily":"'SF Pro Text','Segoe UI',Helvetica,Arial,sans-serif","fontSize":"17px","primaryColor":"#0d1117","primaryTextColor":"#e6edf3","primaryBorderColor":"#8b949e","lineColor":"#6e7681","edgeLabelBackground":"#0d1117"},"flowchart":{"htmlLabels":true,"curve":"basis","padding":18,"nodeSpacing":60,"rankSpacing":70}}}%%
+flowchart LR
+    HP("<b style='font-size:1.15em'>harness-pack</b><br/><span style='font-size:0.85em'>rules, model routing, receipts around every run</span>") --> HW("<b style='font-size:1.15em'>harnesswright</b><br/><span style='font-size:0.85em'>slice ledger and gate: which work is unlocked, whether it may proceed</span>")
+    HW --> V("<b style='font-size:1.15em'>verity</b><br/><span style='font-size:0.85em'>claim verifier: checks each assertion against reality</span>")
+    V --> HP
+    class V gate
+    classDef default fill:#0d1117,stroke:#8b949e,stroke-width:1.5px,color:#e6edf3
+    classDef gate fill:#0d1117,stroke:#ffd699,stroke-width:2px,color:#ffd699
+    classDef pass fill:#0d1117,stroke:#2ea043,stroke-width:1.5px,color:#7ee2a8
+    classDef halt fill:#0d1117,stroke:#ffd699,stroke-width:1.5px,color:#ffd699

@@ -19,23 +19,13 @@ yours to inspect.
 
 ## How it works
 
-```mermaid
-flowchart LR
-    C["claims.json<br/>declared claims"] --> V["verity verify"]
-    V --> R["check reality:<br/>filesystem, git HEAD,<br/>command exit code"]
-    R --> O["✓/✗ receipt<br/>stdout + JSON report"]
-    O --> E["exit code 0 or 1"]
-    E --> G["gates CI /<br/>informs review"]
-```
+<p align="center"><img src="docs/diagrams/verify-flow.png" width="900" alt="Verify flow: claims.json declares the claims, verity verify checks reality across the filesystem, git HEAD, and command exit codes, then emits a receipt on stdout with a JSON report, exits 0 or 1, and gates CI"></p>
 
 ## How it fits with its companions
 
-```mermaid
-flowchart LR
-    HP["harness-pack<br/>rules, model routing,<br/>receipts around every run"] --> HW["harnesswright<br/>slice ledger + gate:<br/>what work exists,<br/>may it proceed?"]
-    HW --> V["verity<br/>claim verifier:<br/>is this assertion true<br/>against reality?"]
-    V --> HP
-```
+<p align="center"><img src="docs/diagrams/stack-loop.png" width="860" alt="Stack loop: harness-pack wraps every run in rules, model routing, and receipts. harnesswright keeps the slice ledger and gate, deciding which work is unlocked and whether it may proceed. verity checks each assertion against reality, and the loop returns to harness-pack"></p>
+
+<sub>The full three-tool integration doc lives in harness-pack at [docs/STACK.md](https://github.com/pietro-falco/harness-pack/blob/main/docs/STACK.md).</sub>
 
 ## Commands
 
