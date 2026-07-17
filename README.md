@@ -1,29 +1,43 @@
 # verity
 
 [![CI](https://github.com/pietro-falco/verity/actions/workflows/ci.yml/badge.svg)](https://github.com/pietro-falco/verity/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/@pietro-falco/verity)](https://www.npmjs.com/package/@pietro-falco/verity)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A notary for your coding agent's "done" — it checks a written claim against reality and stamps it true or false.
+A notary for your coding agent's "done": it checks a written claim
+against reality and stamps it true or false.
 
 Status: alpha
 
 ## The problem, in plain words
 
 Coding agents say "done" a lot. That word is a claim, not proof. verity
-works like a notary: you don't ask it whether your document is *good*, you
-hand it one specific written statement — "this file exists," "this test
-exits 0," "this line is committed at `HEAD`" — and it checks that single
-statement against reality and stamps it true or false. It doesn't read
-intent, doesn't judge quality, doesn't call anyone for a second opinion.
-Just the claim, the evidence, and a stamp — deterministic, offline, and
-yours to inspect.
+works like a notary. You do not ask a notary whether your document is
+*good*; you hand over one specific written statement, "this file
+exists", "this test exits 0", "this line is committed at `HEAD`", and it
+checks that single statement against reality and stamps it true or
+false. It does not read intent, does not judge quality, does not call
+anyone for a second opinion. Just the claim, the evidence, and a stamp:
+deterministic, offline, and yours to inspect.
 
 ## How it works
 
 <p align="center"><img src="docs/diagrams/verify-flow.png" width="900" alt="Verify flow: claims.json declares the claims, verity verify checks reality across the filesystem, git HEAD, and command exit codes, then emits a receipt on stdout with a JSON report, exits 0 or 1, and gates CI"></p>
 
+You declare claims in `.verity/claims.json`. `verity verify` reconciles
+each one against the filesystem, the git HEAD, and command exit codes,
+then prints a receipt and exits `0` or `1`. That exit code is the whole
+integration surface: a shell script, a pre-commit hook, and a CI job all
+gate on it the same way, with no glue code in between.
+
 ## How it fits with its companions
 
 <p align="center"><img src="docs/diagrams/stack-loop.png" width="860" alt="Stack loop: harness-pack wraps every run in rules, model routing, and receipts. harnesswright keeps the slice ledger and gate, deciding which work is unlocked and whether it may proceed. verity checks each assertion against reality, and the loop returns to harness-pack"></p>
+
+harness-pack wraps every run in rules and receipts. harnesswright keeps
+the ledger of which work is unlocked. verity sits underneath both and
+answers the one question everything else depends on: is this specific
+assertion true?
 
 <sub>The full three-tool integration doc lives in harness-pack at [docs/STACK.md](https://github.com/pietro-falco/harness-pack/blob/main/docs/STACK.md).</sub>
 
@@ -37,16 +51,16 @@ yours to inspect.
 
 ## Guarantees and honest limits
 
-- **Deterministic.** The same claims manifest against the same repository
-  state always produces the same verdict — no LLM, no network call, in the
-  loop.
+- **Deterministic.** The same claims manifest against the same
+  repository state always produces the same verdict. No LLM and no
+  network call in the loop.
 - **Zero runtime dependencies.** Node.js built-ins only, so the whole
   checker is auditable in minutes.
 - **Checks truth, not quality.** A passing claim means the assertion was
-  true against reality — it says nothing about whether the code is good.
+  true against reality. It says nothing about whether the code is good.
 - **Doesn't sign or orchestrate.** Release artifacts on npm carry SLSA
-  provenance (from v0.1.1); the receipts verity emits are not signed, and it
-  orchestrates no workflows — see
+  provenance (from v0.1.1); the receipts verity emits are not signed,
+  and it orchestrates no workflows. See
   [`docs/adrs/0001-verity-architecture.md`](docs/adrs/0001-verity-architecture.md)
   for the boundary with adjacent tools.
 - **Fails loud.** Exits `1` on any failed claim, so it composes with
@@ -54,8 +68,8 @@ yours to inspect.
 
 ## Install / Quickstart
 
-The zero-install path — run it in any project with a `.verity/claims.json`
-manifest:
+The zero-install path. Run it in any project that has a
+`.verity/claims.json` manifest:
 
 ```sh
 cd your-repo            # anywhere with a .verity/claims.json
@@ -64,7 +78,7 @@ npx -y @pietro-falco/verity verify
 
 **From source (for development):**
 
-```
+```sh
 git clone https://github.com/pietro-falco/verity.git
 cd verity
 npm install
@@ -81,43 +95,48 @@ node dist/cli.js verify
 | `git_committed`  | path is committed at `HEAD`               | `path`, `match` (against committed content) |
 | `command`        | a command's exit code / stdout            | `run`, `cwd`, `timeoutMs`, `expect` |
 
-`match` is `{ kind: "substring" | "regex" | "sha256", value, flags? }`. Full
-field-by-field semantics, defaults, and PASS conditions are in
+`match` is `{ kind: "substring" | "regex" | "sha256", value, flags? }`.
+Full field-by-field semantics, defaults, and PASS conditions are in
 [`docs/spec.md`](docs/spec.md).
 
 ## For coding agents
 
-[`SKILL.md`](SKILL.md) is a cross-agent skill any coding agent can load. The
-loop it describes: emit `.verity/claims.json` after finishing a task → run
-`verity verify` → paste the full raw receipt back to the human, unedited.
+[`SKILL.md`](SKILL.md) is a cross-agent skill any coding agent can load.
+The loop it describes is short on purpose: emit `.verity/claims.json`
+after finishing a task, run `verity verify`, then paste the full raw
+receipt back to the human, unedited. The last word is the important one.
+A receipt that has been summarized by the agent is prose again.
 
 ## Scope and non-goals
 
-verity does not judge semantic correctness (whether the code is *good*,
-only whether the declared claim is *true*), does not sign anything in v0,
-and does not orchestrate workflows. See
+verity does not judge semantic correctness: it checks whether the
+declared claim is *true*, not whether the code is *good*. It does not
+sign anything in v0 and it does not orchestrate workflows. See
 [`docs/adrs/0001-verity-architecture.md`](docs/adrs/0001-verity-architecture.md)
-for the full reasoning. Where it sits relative to adjacent controls: rules
-files request behavior; commit/CI hooks enforce process at commit time;
-supply-chain attestation (SLSA/in-toto) covers release artifacts post-build;
-verity reconciles task-level claims at review time — standalone, offline,
-in the development loop itself.
+for the full reasoning.
+
+Where it sits relative to adjacent controls: rules files request
+behavior; commit and CI hooks enforce process at commit time;
+supply-chain attestation (SLSA, in-toto) covers release artifacts after
+the build; verity reconciles task-level claims at review time,
+standalone, offline, in the development loop itself.
 
 ## Design choices
 
-- **Zero runtime dependencies.** Node built-ins only — the whole tool is
+- **Zero runtime dependencies.** Node built-ins only. The whole tool is
   auditable in minutes, with near-zero supply-chain surface.
-- **Deterministic and offline.** No network calls, no LLM in the loop. Same
-  inputs, same verdicts, every time.
-- **In-toto-inspired vocabulary.** Receipts use `subject` / `predicate` /
-  `evidence` / `verdict`, borrowed for interoperability with other
+- **Deterministic and offline.** No network calls, no LLM in the loop.
+  Same inputs, same verdicts, every time.
+- **In-toto-inspired vocabulary.** Receipts use `subject` / `predicate`
+  / `evidence` / `verdict`, borrowed for interoperability with other
   evidence-consuming tooling.
 
 ## Verifying verity
 
-This repository verifies itself: [`.verity/claims.json`](.verity/claims.json)
-declares claims about verity's own README, license, ADR status, docs, and
-test suite. Run it with:
+This repository verifies itself:
+[`.verity/claims.json`](.verity/claims.json) declares claims about
+verity's own README, license, ADR status, docs, and test suite. If any
+of them drifts, the repository's own gate goes red. Run it with:
 
 ```sh
 node dist/cli.js verify
@@ -127,4 +146,4 @@ npx -y @pietro-falco/verity verify
 
 ## License
 
-MIT — see [`LICENSE`](LICENSE).
+MIT, see [`LICENSE`](LICENSE).
