@@ -4,15 +4,15 @@
 [![npm](https://img.shields.io/npm/v/@pietro-falco/verity)](https://www.npmjs.com/package/@pietro-falco/verity)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A notary for your coding agent's "done": it checks a written claim
-against reality and stamps it true or false.
+Your coding agent's "done" is a claim. verity checks that claim against
+reality and returns true or false — deterministically, locally, offline.
 
 Status: alpha
 
 ## The problem, in plain words
 
 Coding agents say "done" a lot. That word is a claim, not proof. verity
-works like a notary. You do not ask a notary whether your document is
+answers one question only. You do not ask it whether your document is
 *good*; you hand over one specific written statement, "this file
 exists", "this test exits 0", "this line is committed at `HEAD`", and it
 checks that single statement against reality and stamps it true or
@@ -59,7 +59,7 @@ assertion true?
 - **Checks truth, not quality.** A passing claim means the assertion was
   true against reality. It says nothing about whether the code is good.
 - **Doesn't sign or orchestrate.** Release artifacts on npm carry SLSA
-  provenance (from v0.1.1); the receipts verity emits are not signed,
+  provenance (from v0.1.1); the reports verity emits are not signed,
   and it orchestrates no workflows. See
   [`docs/adrs/0001-verity-architecture.md`](docs/adrs/0001-verity-architecture.md)
   for the boundary with adjacent tools.
@@ -127,7 +127,7 @@ standalone, offline, in the development loop itself.
   auditable in minutes, with near-zero supply-chain surface.
 - **Deterministic and offline.** No network calls, no LLM in the loop.
   Same inputs, same verdicts, every time.
-- **In-toto-inspired vocabulary.** Receipts use `subject` / `predicate`
+- **In-toto-inspired vocabulary.** Verification reports use `subject` / `predicate`
   / `evidence` / `verdict`, borrowed for interoperability with other
   evidence-consuming tooling.
 

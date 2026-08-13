@@ -1,6 +1,6 @@
 # verity
 
-> A notary for a coding agent's "done" — you hand it one specific written
+> A checker for a coding agent's "done" — you hand it one specific written
 > claim ("this file exists," "this test exits 0," "this line is committed
 > at HEAD") and it checks that single statement against reality and stamps
 > it true or false. Just the claim, the evidence, and a stamp.

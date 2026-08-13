@@ -2,7 +2,7 @@
   "name": "@pietro-falco/verity",
   "version": "0.1.1",
   "type": "module",
-  "description": "Turn your coding agent's 'done' into a receipt you can check — deterministic, local, zero-dependency.",
+  "description": "Turn your coding agent's 'done' into a verdict you can check — deterministic, local, zero-dependency.",
   "bin": {
     "verity": "dist/cli.js"
   },
@@ -24,7 +24,6 @@
     "guardrails",
     "claude-code",
     "evidence",
-    "receipt",
     "cli",
     "deterministic"
   ],
