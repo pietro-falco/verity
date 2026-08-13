@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.2] - 2026-08-13
+
+- Terminology. The "notary" framing is retired throughout: it has an occupied
+  normative referent (the Notary Project) and verity is not a notary. What
+  verity emits is a verification report, which is what the code has always
+  called it. No behaviour changes; no API changes; the report format is
+  unchanged byte for byte.
+
 ## [0.1.1] - 2026-07-13
 
 - Release workflow (`.github/workflows/release.yml`): tagged releases publish

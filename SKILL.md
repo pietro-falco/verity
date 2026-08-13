@@ -1,13 +1,13 @@
 ---
 name: verity
-description: Use after completing a coding task, to produce a verifiable receipt of what was actually done instead of a prose claim of completion.
+description: Use after completing a coding task, to produce a verifiable report of what was actually done instead of a prose claim of completion.
 ---
 
 ## What this does
 
 verity reconciles your claims about a task against literal reality — files
 on disk, git history, real command exit codes. The human reviewing your work
-trusts the receipt it produces, not your narration of what you did.
+trusts the report it produces, not your narration of what you did.
 
 ## Workflow
 
@@ -67,5 +67,5 @@ trusts the receipt it produces, not your narration of what you did.
   is not the same claim as a file being committed.
 - Keep `command` claims fast and side-effect-free; they run for real, every
   verification.
-- Add `.verity/reports/` to your project's `.gitignore` — receipts are
+- Add `.verity/reports/` to your project's `.gitignore` — reports are
   generated artifacts, not source.

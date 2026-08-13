@@ -26,7 +26,7 @@ deterministic, offline, and yours to inspect.
 
 You declare claims in `.verity/claims.json`. `verity verify` reconciles
 each one against the filesystem, the git HEAD, and command exit codes,
-then prints a receipt and exits `0` or `1`. That exit code is the whole
+then prints its verdict and exits `0` or `1`. That exit code is the whole
 integration surface: a shell script, a pre-commit hook, and a CI job all
 gate on it the same way, with no glue code in between.
 
@@ -34,7 +34,7 @@ gate on it the same way, with no glue code in between.
 
 <p align="center"><img src="docs/diagrams/stack-loop.png" width="860" alt="Stack loop: harness-pack wraps every run in rules, model routing, and receipts. harnesswright keeps the slice ledger and gate, deciding which work is unlocked and whether it may proceed. verity checks each assertion against reality, and the loop returns to harness-pack"></p>
 
-harness-pack wraps every run in rules and receipts. harnesswright keeps
+harness-pack wraps every run in rules and a hash-chained run log. harnesswright keeps
 the ledger of which work is unlocked. verity sits underneath both and
 answers the one question everything else depends on: is this specific
 assertion true?
@@ -104,8 +104,8 @@ Full field-by-field semantics, defaults, and PASS conditions are in
 [`SKILL.md`](SKILL.md) is a cross-agent skill any coding agent can load.
 The loop it describes is short on purpose: emit `.verity/claims.json`
 after finishing a task, run `verity verify`, then paste the full raw
-receipt back to the human, unedited. The last word is the important one.
-A receipt that has been summarized by the agent is prose again.
+report back to the human, unedited. The last word is the important one.
+A report that has been summarized by the agent is prose again.
 
 ## Scope and non-goals
 

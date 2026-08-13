@@ -106,9 +106,9 @@ exit code, non-matching stdout, or a timeout (process is killed, claim FAILs).
 - `2` — usage error: manifest not found, invalid JSON, a schema violation,
   or an unknown claim type.
 
-## The receipt
+## The report
 
-Every `verity verify` run writes a JSON receipt to
+Every `verity verify` run writes a JSON report to
 `.verity/reports/<ISO-timestamp>.json` (under the process's current working
 directory), regardless of `--json`. `--json` also prints the same JSON to
 stdout instead of the human-readable summary.
