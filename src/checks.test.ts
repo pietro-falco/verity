@@ -114,18 +114,69 @@ test("file_matches: regex kind passes and fails correctly, including flags", () 
   });
 });
 
+/**
+ * Every `git` this suite invokes goes through here, and the point is that its
+ * configuration is PASSED IN rather than inherited.
+ *
+ * The defect this closes was measured, not predicted: the scratch repositories
+ * below were created with a bare `git init` and then committed to with a bare
+ * `git commit`, so they inherited the host's global config. On a host carrying
+ * `commit.gpgsign=true` with `gpg.format=ssh` — an ordinary configuration, and
+ * this repository's own — `git commit` exits 128 with
+ * `error: Couldn't load public key …` / `fatal: failed to write commit object`
+ * the moment the signing key is not readable. `execFileSync` throws, and three
+ * tests die in their fixture setup without ever reaching the assertion they
+ * exist to make. A test that cannot fail for its own reason is not a test.
+ *
+ * So both halves are pinned:
+ *
+ * - `GIT_CONFIG_GLOBAL` and `GIT_CONFIG_SYSTEM` are pointed at `/dev/null`, so
+ *   NOTHING on the host reaches this git — not signing, not `core.hooksPath`,
+ *   not a `commit.template`, and not whatever the next host adds.
+ * - Everything these repositories actually need is then supplied explicitly by
+ *   `-c`, because with the config files closed off there is no other source.
+ *   `user.name`/`user.email` because git refuses to commit without an identity;
+ *   `commit.gpgsign=false`/`tag.gpgsign=false` belt-and-braces, so the intent
+ *   is legible at the call site rather than resting on the env vars alone;
+ *   `init.defaultBranch` so `git init` neither warns nor depends on the host's
+ *   choice of name.
+ *
+ * The criterion is that this suite returns the same verdict on a host with a
+ * readable signing key and on a host without one.
+ */
+function git(dir: string, ...args: string[]): void {
+  execFileSync(
+    "git",
+    [
+      "-c",
+      "user.name=Verity Test",
+      "-c",
+      "user.email=verity-test@example.com",
+      "-c",
+      "commit.gpgsign=false",
+      "-c",
+      "tag.gpgsign=false",
+      "-c",
+      "init.defaultBranch=main",
+      ...args,
+    ],
+    {
+      cwd: dir,
+      env: { ...process.env, GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_SYSTEM: "/dev/null" },
+    },
+  );
+}
+
 function initGitRepo(dir: string): void {
-  execFileSync("git", ["init", "-q"], { cwd: dir });
-  execFileSync("git", ["config", "user.email", "verity-test@example.com"], { cwd: dir });
-  execFileSync("git", ["config", "user.name", "Verity Test"], { cwd: dir });
+  git(dir, "init", "-q");
 }
 
 test("git_committed: passes for a committed path, fails for uncommitted/missing paths", () => {
   withTmpDir((dir) => {
     initGitRepo(dir);
     writeFileSync(join(dir, "tracked.txt"), "committed content");
-    execFileSync("git", ["add", "tracked.txt"], { cwd: dir });
-    execFileSync("git", ["commit", "-q", "-m", "init"], { cwd: dir });
+    git(dir, "add", "tracked.txt");
+    git(dir, "commit", "-q", "-m", "init");
     writeFileSync(join(dir, "untracked.txt"), "never committed");
 
     const ctx: CheckContext = { cwd: dir, repoRoot: dir };
@@ -145,8 +196,8 @@ test("git_committed: applies the match spec against the committed content, not t
   withTmpDir((dir) => {
     initGitRepo(dir);
     writeFileSync(join(dir, "tracked.txt"), "version one");
-    execFileSync("git", ["add", "tracked.txt"], { cwd: dir });
-    execFileSync("git", ["commit", "-q", "-m", "init"], { cwd: dir });
+    git(dir, "add", "tracked.txt");
+    git(dir, "commit", "-q", "-m", "init");
     // Working tree now diverges from HEAD.
     writeFileSync(join(dir, "tracked.txt"), "version two");
 
