@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 title: "Structured evidence: the digest exists, only the slot is missing"
 id: ADR-002
 date: 2026-08-13
@@ -11,10 +11,62 @@ related-adrs: [verity/ADR-001, harness-pack/ADR-018, harness-pack/ADR-019, harne
 
 ## Status
 
-Proposed
+Accepted 2026-08-13 by direct operator ratification, on the text committed at
+`d90f8dc03facc3d257d1a228cd0dae8e9183e3bb`, git blob
+`17d20ac3392a28c0f0be080472309f4da7017071`. Originally proposed 2026-08-13 as a
+docs-only commit. Acceptance requires operator review and a separate ratification
+commit; this is that commit, and on the precedent `harness-pack/ADR-018`,
+`ADR-019` and `ADR-020` set, **the ratification commit is the implementing
+commit**.
 
-**This ADR decides; no code is written against it while it is Proposed.** No
-type change, no fixture and no test ships with this commit.
+Four things ship, and they are the whole of what this decision costs:
+
+- **The slot.** `ClaimResult.subjectDigest?: DigestSet` in `src/types.ts`, with
+  `DigestSet` exported as `Record<string, string>` — the algorithm as a key,
+  never as a field name.
+- **The two producers.** `file_matches` and `git_committed` populate it when the
+  claim declared a `sha256` match. No new I/O: `matchBuffer` already hashed the
+  buffer in order to compare it, and the hex previously reached the caller only
+  by being interpolated into an English sentence. `MatchOutcome` gains an
+  optional `digest` to carry it out.
+- **The two refusals, with their reasons in the code.** `file_exists` and
+  `command` never populate it, and D3's and D4's arguments are restated as
+  doc-comments at each refusal site rather than left in this document alone.
+- **Three tests**, in `src/checks.test.ts`.
+
+**The three tests were run against the PRE-CHANGE `src/checks.ts` and all three
+failed**, which is what makes them controls rather than descriptions. The D5 one
+failed with the exact leak it exists to catch: `d5-2 (FAIL) leaked the absolute
+working directory: does not exist at /…/absent.txt`. [verified]
+
+**The ratified text differs from the proposed text on five points, named here
+rather than left to a diff. D1 through D4 stand word for word as proposed; D5's
+DECISION is unchanged and one measurement inside its rationale is corrected.**
+
+1. This Status block, in place of the nothing-ships-yet paragraph.
+2. **The Basis's measurement-documents paragraph**, repointed from
+   `${TMPDIR}/attest-s1/` to the tracked manifest in `harness-pack` at
+   `.verity/evidence/2026-08-13-attestation-s1/README.md`, with the bytes
+   recorded as held in the operator's private governance vault. The digests are
+   unchanged, because the bytes are.
+3. **D5's closing measurement is corrected, and this is the substantive
+   change.** See the correction recorded under D5 and in ledger row A2.
+4. The Verification section's rows, whose "Not yet observed" was true when
+   written and stopped being true in this commit.
+5. The Open requirements and the Assumption ledger: OR-2 closes, OR-3 narrows to
+   a measured remainder, and A2 is falsified — by its own falsifier, exactly as
+   that row specified.
+
+**The one fact worth putting in the Status block rather than only under D5.**
+This document asserted that `src/checks.ts:75` was the only site interpolating a
+path this repository resolved to absolute, and carried that as `[assumed]` in
+ledger row A2 with the falsifier "Any evidence string, from any type, carrying an
+absolute path after D5 lands. This is exactly what D5's fixture is scoped to
+catch." The fixture was written, it caught one, and the assumption is false:
+`src/checks.ts:114` interpolates `${abs}` as well. The method held — the
+document's own falsifier found the document's own error before acceptance
+attached to it — and the decision D5 states in its heading, *no evidence string
+carries an absolute path*, is implemented at both sites. [verified]
 
 ## Numbering and form note
 
@@ -71,8 +123,29 @@ Citations into `verity` are read against the committed blob
 (`git status --porcelain` empty). Citations into `harness-pack` are read against
 its committed blobs at the HEAD above.
 
-**Measurement documents**, under `${TMPDIR}/attest-s1/`. Cited, **not
-re-derived**.
+**Measurement documents.** Cited by digest, **not re-derived**.
+
+Their manifest is tracked in the `harness-pack` repository at
+`.verity/evidence/2026-08-13-attestation-s1/README.md`, which carries the path,
+sha256 and byte length of every file in the corpus and none of their bytes. The
+bytes themselves are held in the **operator's private governance vault**, in a
+frozen bundle under the same names. The reason for the split is stated in that
+manifest: the measurement documents record absolute home paths and the names of
+private repositories, because that is what they measured — `N3-PUBLISH.md`
+exists to census receipts across repositories *by path*, and a sanitized census
+measures something else — while `harness-pack` is destined to be public and
+carries a privacy lint built to keep exactly that material out of tracked files.
+Neither fact yields, so **the digest travels and the bytes do not**. A sha256
+identifies the bytes it names wherever those bytes are held, which is what makes
+the split cost these citations nothing.
+
+**This paragraph replaces a Basis that pointed at `${TMPDIR}/attest-s1/`.** That
+location is swept, so the proposed text was a document whose evidence base had an
+expiry — and an Accepted ADR is immutable, so the repair had to happen **before**
+acceptance attached to it rather than after. `harness-pack/ADR-018`, `ADR-019`
+and `ADR-020` all carried the same defect and were repaired the same way; the
+manifest's own "Who cites it" table listed this document as the last outstanding
+one. The digests below are **unchanged**, because the bytes are. [verified]
 
 | Document | sha256 |
 |---|---|
@@ -263,6 +336,49 @@ asymmetry that decides this.
 strings are OS error messages (`:114`, `:159`, `:218`), whose content is the
 platform's, not this file's, and which are OR-3.
 
+---
+
+**CORRECTED AT RATIFICATION. The paragraph above is wrong, and the decision this
+section's own heading states is what ships.** Corrected in place rather than
+appended, because this document was still Proposed when the error was found and
+immutability attaches at acceptance; the original sentence is kept above so the
+record shows what was believed before it was measured.
+
+`src/checks.ts:114` — `` `file not found at ${abs}: ${(err as Error).message}` ``
+— is **not** an OS error message. It interpolates `${abs}`, this file's own
+resolved absolute path, before the platform's message. Read at this document's
+own pinned basis `4dc016b`, `git grep -n '\${abs}' src/checks.ts` returns **two**
+lines, `:75` and `:114`, and `src/checks.ts` is byte-identical between that basis
+and the ratification HEAD, so the error was in the reading and not in a change
+since. [verified]
+
+**And the platform's half is worse than the paragraph assumed.** Node's `ENOENT`
+message is, measured on this host, verbatim:
+
+```
+ENOENT: no such file or directory, open '/…/definitely-absent-xyz'
+```
+
+So the FAIL branch of `file_matches` disclosed the absolute path **twice per
+occurrence** — once from this file, once from the message it passed through.
+Passing the platform's string along was therefore not the neutral act OR-3 took
+it for. [verified]
+
+**What ships, at both sites.** `:75` becomes `` `does not exist at ${claim.path}` ``.
+`:114` becomes `` `file not found at ${claim.path}: ${err.code}` `` — the
+diagnostic **class** is kept, because `ENOENT` and `EACCES` are different
+problems and a consumer needs to tell them apart, and `err.message` is dropped,
+because the platform decides what goes in it and on this platform what goes in it
+is a path.
+
+By contrast `git`'s stderr, measured the same way, is
+`fatal: path 'x' does not exist in 'HEAD'` — repo-relative, no absolute path —
+so `:159` needed no change and remains OR-3's genuine remainder. The observable
+behaviour change declared four paragraphs above now covers `file_matches`'
+unreadable-file branch as well as `file_exists`' missing-file branch, on the same
+argument and with the same bound: `subject` already carried the relative path on
+both returns.
+
 ## Verification
 
 Named here, authored at acceptance. Each falsifier declares whether its RED is
@@ -282,6 +398,25 @@ what makes the change defensible, not the first.
 Half (b) is the one that fails if the change is ever quietly made non-additive,
 and it is the reason to write it now rather than after.
 
+**PRODUCED AND OBSERVED AT RATIFICATION.** Both halves shipped and both were run
+against the pre-change `src/checks.ts` first; both failed there, so neither is a
+description of what the code already did.
+
+Half (a) checks the **spelling** and not only the value: one key, that key is the
+algorithm, and the object carries neither `alg` nor `value` as a field name — a
+test that compared only the hex would accept `harness-pack/ADR-018` D2's rejected
+shape. The digest is recomputed from the bytes on disk rather than read back out
+of the result, because a digest that only agrees with itself measures nothing. It
+also pins the three negatives in the same test: a `substring` claim acquires no
+digest, `file_exists` acquires none (D3), and `command` acquires none even when
+`expect.stdout.kind === "sha256"` makes `matchBuffer` compute one and put the hex
+into `evidence` — D4's near-miss, asserted live rather than described.
+
+Half (b) models the consumer literally: a function whose parameter type is
+`{verdict, evidence}` and which therefore **cannot** see the new field. Its two
+outputs are pinned to their exact strings rather than to a recording, so a reword
+is caught here and not by a downstream parser. [verified]
+
 **D5 — `no_absolute_path_in_evidence`.** A fixture asserting that **no** evidence
 string, from **any** of the four types, contains an absolute path.
 
@@ -296,10 +431,37 @@ Its scope is all four types, not just `file_exists`, because a fixture scoped to
 the one known site would pass forever the moment a second site appeared. That is
 the vacuous-detector shape `harness-pack/ADR-017` names.
 
+**HELD IN THE SUITE AT RATIFICATION, AND THE SCOPE DECISION PAID FOR ITSELF
+IMMEDIATELY.** The fixture sweeps nine results — every branch of all four types
+that can name a path, PASS and FAIL — and checks each twice: for the run's own
+absolute temporary directory, and for an absolute path *by shape* under any
+prefix. Run against the pre-change source it failed on `d5-2` with
+`does not exist at /…/absent.txt`, the measured leak reproduced in-suite.
+
+**A fixture scoped to `:75` would have shipped this ADR with the second site
+intact.** That is not a hypothetical: `:114` is exactly the "second site" the
+paragraph above warned about, this document had already classified it as
+harmless, and the only thing that caught it was the scope. The correction is
+recorded under D5 and in ledger row A2.
+
+The control against the reverse failure — a rule that refuses everything, or a
+sweep over strings that all happen to be empty — is that the two branches this
+decision changed are pinned to their exact text, `does not exist at absent.txt`
+and `file not found at absent.txt: ENOENT`, alongside an assertion that `subject`
+still carries the relative path. [verified]
+
 **D3 and D4 — no fixture named here.** Both are decisions *not* to populate a
 field. A test asserting a field's absence would pass trivially today, before the
 field exists, and would keep passing for the wrong reason afterwards. They become
 testable once D1 lands, and they are OR-2.
+
+**WRITTEN AT RATIFICATION, and folded into D1/D2's fixture rather than given
+their own.** The premise that held them open is gone: the field exists, so
+asserting its absence is no longer trivially true. They are not separate tests
+because both assertions need the same fixture body to be non-vacuous — D4's in
+particular is only worth anything in the presence of a `command` claim whose
+`matchBuffer` genuinely computed a digest, which the same test already
+constructs. OR-2 closes.
 
 ## Non-goals
 
@@ -320,6 +482,11 @@ testable once D1 lands, and they are OR-2.
   bytes and computes no digest today. Whether it should emit one unbidden is
   undecided; D2 scopes the slot to the `sha256` match case only.
 - **OR-2 — falsifiers for D3 and D4.** Writable once D1's field exists.
+
+  **CLOSED at ratification.** Both assertions are carried inside D1/D2's fixture,
+  for the reason given in Verification: they need that fixture's body to be
+  non-vacuous, and D4's needs a `command` claim that genuinely computed a stdout
+  digest.
 - **OR-3 — OS error messages in evidence.** `src/checks.ts:114`, `:159` and
   `:218` interpolate platform-authored strings that may contain paths this
   repository did not construct. D5 does not reach them; whether an evidence
@@ -327,8 +494,25 @@ testable once D1 lands, and they are OR-2.
   decision. D5's fixture, being scoped to all four types, will surface any that
   do — which is the intended way to discover the size of this OR rather than
   guess it.
+
+  **NARROWED at ratification, and the narrowing is a correction rather than
+  progress.** `:114` was never an OS-message site: it interpolated `${abs}` in
+  its own right, and Node's message carried the path a second time. It is fixed
+  under D5 and leaves this OR. What remains here is `:159` and `:218` —
+  `git show`'s stderr and a spawn failure — and `:159` was **measured** at
+  ratification and is clean: `fatal: path 'x' does not exist in 'HEAD'`,
+  repo-relative. `:218` (`command failed to spawn: ${err.message}`) is
+  unmeasured and is what this OR now consists of. The last sentence of the
+  original text did exactly what it promised — the fixture surfaced the size of
+  the OR rather than leaving it to be guessed — and what it surfaced is that the
+  OR was mis-scoped in both directions at once. [verified]
 - **OR-4 — register `verity/` in `vault/ADR-051` D1's prefix registry.** A
   vault-side act. See the Numbering and form note.
+
+  **OPEN at ratification, and it is open in more than one document.**
+  `harness-pack/ADR-020` OR-3 carries the same gap from the other side. It is a
+  vault-side act and is delegated to the vault's ADR thread; nothing here can
+  close it.
 
 ## Consequences
 
@@ -341,6 +525,13 @@ testable once D1 lands, and they are OR-2.
   (`harness-pack/ADR-020` D3) still needs to exist — a source fix does not
   retroactively clean 49 files already on disk, and it does not constrain the
   other three carrier classes that repository measured.
+
+  *At ratification: two lines, not one — see the correction under D5. And the
+  two decisions landed in the same arc, so the source fix and the publication
+  boundary now exist together. That is defence in depth by accident of schedule
+  rather than by design, and it is worth noting which one is load-bearing: the
+  boundary is, because it constrains carrier classes this repository does not
+  own.*
 - **The consumers of `evidence` for a FAILing `file_exists` see a different
   string.** Stated in D5 rather than discovered by whoever hits it.
 - **`harness-pack` gains nothing from this ADR until it changes a claim.** All
@@ -358,5 +549,5 @@ Every `[assumed]` in this document, with the observation that would falsify it.
 | # | Assumption | Falsifier |
 |---|---|---|
 | A1 | **[assumed]** No consumer outside this repository parses `evidence` **structurally** — by regex, split, or field extraction — such that adding a sibling field or changing the `file_exists` FAIL string would break it. The one consumer read is `harness-pack/scripts/launch_worker.sh:303`, which passes the whole string through opaquely. | Any consumer, in any repository, matching on evidence's internal shape. D2's fixture half (b) covers only the opaque-passthrough consumer; a structural parser would break on D5 and the fixture would not notice. This is the assumption most likely to be wrong, because verity is distributed via npm and its consumers are not all enumerable from here. |
-| A2 | **[assumed]** `src/checks.ts:75` is the only site in this repository that interpolates a path this repository resolved to absolute. Established by reading the file, not by a tool that proves absence. | Any evidence string, from any type, carrying an absolute path after D5 lands. This is exactly what D5's fixture is scoped to catch, which is why its scope is all four types rather than the one known site. |
+| A2 | **[assumed]** `src/checks.ts:75` is the only site in this repository that interpolates a path this repository resolved to absolute. Established by reading the file, not by a tool that proves absence. | Any evidence string, from any type, carrying an absolute path after D5 lands. This is exactly what D5's fixture is scoped to catch, which is why its scope is all four types rather than the one known site. **FALSIFIED AT RATIFICATION, by this row's own falsifier, before acceptance attached.** `src/checks.ts:114` interpolates `${abs}` as well: `git grep -n '\${abs}' src/checks.ts` returns two lines at this document's own pinned basis, and the file is byte-identical between that basis and the ratification HEAD, so the error was in the reading. The assumption's *method* is what held — the row named the observation that would kill it, the fixture was built to make that observation, and it made it on the first run. Both sites are fixed. The row is retired rather than rewritten: what would now be assumed is that a `git grep` for `${abs}` enumerates every way a path can become absolute in this file, and that is a narrower and checkable claim, not an assumption. |
 | A3 | **[assumed]** The receipt census's finding that both leaks came from this line generalises — i.e. no other verity output path has leaked into a receipt without being measured. The census covered receipts on disk; it did not enumerate every string this repository can emit. | A receipt or Statement carrying a host path traceable to a verity site other than `:75`. Falsification does not weaken D5; it widens OR-3. |

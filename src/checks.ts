@@ -16,6 +16,15 @@ import type {
 interface MatchOutcome {
   pass: boolean;
   evidence: string;
+  /**
+   * ADR-002 D2. The digest this outcome computed, when it computed one.
+   *
+   * "The value exists in a local variable. Only the slot is missing." This is
+   * that slot, and it costs no I/O: the `sha256` branch already hashes the
+   * buffer in order to compare it, and until now the hex reached the caller
+   * only by being interpolated into an English sentence.
+   */
+  digest?: string;
 }
 
 function matchBuffer(buf: Buffer, match: MatchSpec): MatchOutcome {
@@ -27,6 +36,12 @@ function matchBuffer(buf: Buffer, match: MatchSpec): MatchOutcome {
       evidence: pass
         ? `sha256 digest ${digest} matches expected`
         : `sha256 digest ${digest} != expected ${match.value.toLowerCase()}`,
+      // Carried on BOTH verdicts. A FAILing claim's digest is the digest of
+      // what is actually there, which is exactly what a consumer diagnosing the
+      // failure needs; withholding it on FAIL would make the field a property
+      // of the verdict rather than of the subject, which is not what D1's name
+      // promises.
+      digest: digest.toLowerCase(),
     };
   }
 
@@ -58,6 +73,18 @@ function describeMatch(match: MatchSpec): string {
   return `content matches regex /${match.value}/${match.flags ?? ""}`;
 }
 
+/**
+ * ADR-002 D3 — this type NEVER populates `subjectDigest`, and the reason is
+ * written here rather than left to be rediscovered.
+ *
+ * `statSync` never reads the file. Emitting a digest would mean reading the
+ * bytes: NEW I/O, and a real change of cost on a claim whose entire point is
+ * that it is cheap — a manifest may declare hundreds of `file_exists` claims
+ * precisely because each is one `stat`. This is a deliberate non-decision with
+ * its cost named, not an omission: it is the one type where a digest would be a
+ * behavioural change rather than an extraction. Anyone who later wants it must
+ * argue the cost, not discover it.
+ */
 export function checkFileExists(claim: FileExistsClaim, ctx: CheckContext): ClaimResult {
   const abs = resolve(ctx.cwd, claim.path);
   const predicate = claim.nonEmpty ? "file exists and is non-empty" : "file exists";
@@ -72,7 +99,19 @@ export function checkFileExists(claim: FileExistsClaim, ctx: CheckContext): Clai
       subject: claim.path,
       predicate,
       verdict: "FAIL",
-      evidence: `does not exist at ${abs}`,
+      // ADR-002 D5. This was `does not exist at ${abs}` -- absolute and
+      // host-specific by construction, since `abs = resolve(ctx.cwd, claim.path)`
+      // above. It is the MEASURED origin of both leaks in the receipt corpus:
+      // N3-PUBLISH.md censused 49 receipts and found 2 carrying the operator's
+      // home directory, at .contribution.baseline.claims[*].evidence, which is
+      // this branch. `claim.path` is already the value of `subject` on this same
+      // return and is relative by construction.
+      //
+      // The information is relocated, not lost: `ctx.cwd` is the consumer's own
+      // context, so a consumer that needs an absolute path can resolve one --
+      // while a consumer that receives one it did not want cannot un-receive it.
+      // That asymmetry is what decides this.
+      evidence: `does not exist at ${claim.path}`,
     };
   }
 
@@ -111,7 +150,19 @@ export function checkFileMatches(claim: FileMatchesClaim, ctx: CheckContext): Cl
       subject: claim.path,
       predicate,
       verdict: "FAIL",
-      evidence: `file not found at ${abs}: ${(err as Error).message}`,
+      // ADR-002 D5, SECOND SITE. The proposed text called this "an OS error
+      // message, whose content is the platform's, not this file's". Measured at
+      // the ADR's own basis, that reading was wrong twice over: the line
+      // interpolated `${abs}` -- this file's own resolved absolute path -- and
+      // the Node message it passed through carries the absolute path AGAIN
+      // ("ENOENT: no such file or directory, open '/…'"). So the FAIL branch of
+      // file_matches disclosed the host path twice per occurrence.
+      //
+      // `err.code` is kept because the diagnostic class is the informative part
+      // -- ENOENT and EACCES are different problems -- and `err.message` is
+      // dropped because the platform decides what goes in it, and on this
+      // platform what goes in it is a path.
+      evidence: `file not found at ${claim.path}: ${(err as NodeJS.ErrnoException).code ?? "read failed"}`,
     };
   }
 
@@ -123,6 +174,10 @@ export function checkFileMatches(claim: FileMatchesClaim, ctx: CheckContext): Cl
     predicate,
     verdict: outcome.pass ? "PASS" : "FAIL",
     evidence: outcome.evidence,
+    // ADR-002 D2: file_matches populates the slot when the claim declared a
+    // sha256 match, which is the case matchBuffer computes a digest on. No new
+    // I/O -- the bytes are already read and already hashed.
+    ...(outcome.digest ? { subjectDigest: { sha256: outcome.digest } } : {}),
   };
 }
 
@@ -191,11 +246,40 @@ export function checkGitCommitted(claim: GitCommittedClaim, ctx: CheckContext): 
     predicate,
     verdict: outcome.pass ? "PASS" : "FAIL",
     evidence: `git show HEAD:${repoRelativePath} exit 0; ${outcome.evidence}`,
+    // ADR-002 D2, and this is the BEST-PLACED of the four types -- not for
+    // convenience but because it is the only one measuring something immutable
+    // by construction: a blob at HEAD, not a working-tree file that may differ
+    // by the time anyone reads the result. resource_descriptor.md:51 asks a
+    // producer to set `digest` "to denote an immutable artifact or resource",
+    // and this is the one type that can honour that unconditionally.
+    //
+    // Only when a `match` was declared. Whether git_committed should digest the
+    // bytes it holds when no match is declared -- it has them, and the digest is
+    // one createHash away -- is ADR-002 OR-1 and is deliberately not decided
+    // here: it would make a digest appear where a user declared no interest in
+    // one.
+    ...(outcome.digest ? { subjectDigest: { sha256: outcome.digest } } : {}),
   };
 }
 
 const DEFAULT_COMMAND_TIMEOUT_MS = 60_000;
 
+/**
+ * ADR-002 D4 — this type NEVER populates `subjectDigest`, and the near-miss is
+ * worth refusing explicitly.
+ *
+ * Its `subject` is `claim.run`, a command line. A command line is not an
+ * artifact; there is nothing whose digest would mean anything.
+ *
+ * The near-miss: with `expect.stdout.kind === "sha256"`, `matchBuffer` below
+ * DOES compute a digest of `result.stdout`, and that outcome now carries it in
+ * `outcome.digest`. It is deliberately not used. **Stdout is a different object
+ * than the one the claim measures** — a `command` claim asserts whatever the
+ * command chose to check, and its output is a report about that assertion, not
+ * the assertion's subject. Putting it in `subjectDigest` would place a digest
+ * under a name that promises the subject, which is the exact ambiguity that
+ * field name was chosen to prevent. This type is opaque by design and stays so.
+ */
 export function checkCommand(claim: CommandClaim, ctx: CheckContext): ClaimResult {
   const expectedExitCode = claim.expect.exitCode ?? 0;
   const timeoutMs = claim.timeoutMs ?? DEFAULT_COMMAND_TIMEOUT_MS;
